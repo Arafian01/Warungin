@@ -1,20 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/transaksi_model.dart';
 import '../models/detail_transaksi_model.dart';
 
 class TransaksiService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  String get _userId => _auth.currentUser?.uid ?? '';
-
-  // Get collection reference for current user
+  // Get collection reference - flat structure
   CollectionReference get _transaksiCollection => 
-      _firestore.collection('users').doc(_userId).collection('transaksi');
+      _firestore.collection('transaksi');
   
   CollectionReference get _detailTransaksiCollection => 
-      _firestore.collection('users').doc(_userId).collection('detail_transaksi');
+      _firestore.collection('detail_transaksi');
 
   // Create transaksi with details
   Future<String> createTransaksi(

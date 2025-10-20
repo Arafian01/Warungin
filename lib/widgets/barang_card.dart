@@ -9,6 +9,7 @@ class BarangCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onKelolaSatuan;
   final bool showActions;
 
   const BarangCard({
@@ -17,6 +18,7 @@ class BarangCard extends StatelessWidget {
     this.onTap,
     this.onEdit,
     this.onDelete,
+    this.onKelolaSatuan,
     this.showActions = true,
   }) : super(key: key);
 
@@ -69,6 +71,14 @@ class BarangCard extends StatelessWidget {
           
           // Actions
           if (showActions) ...[
+            if (onKelolaSatuan != null)
+              IconButton(
+                onPressed: onKelolaSatuan,
+                icon: const Icon(Icons.scale_outlined),
+                color: AppColors.success,
+                iconSize: 20,
+                tooltip: 'Kelola Satuan',
+              ),
             IconButton(
               onPressed: onEdit,
               icon: const Icon(Icons.edit_outlined),

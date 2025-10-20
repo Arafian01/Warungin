@@ -8,6 +8,7 @@ import '../../widgets/barang_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_indicator.dart';
 import 'barang_form_page.dart';
+import 'barang_satuan_list_page.dart';
 
 class BarangListPage extends StatelessWidget {
   const BarangListPage({Key? key}) : super(key: key);
@@ -72,6 +73,13 @@ class BarangListPage extends StatelessWidget {
               final barang = barangList[index];
               return BarangCard(
                 barang: barang,
+                onKelolaSatuan: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BarangSatuanListPage(barang: barang),
+                    ),
+                  );
+                },
                 onEdit: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
