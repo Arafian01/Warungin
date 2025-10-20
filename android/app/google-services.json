@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "594527888713",
+    "project_id": "inventory-app-f8ff6",
+    "storage_bucket": "inventory-app-f8ff6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:594527888713:android:4abaaf662abffeb9086698",
+        "android_client_info": {
+          "package_name": "com.warungin.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "594527888713-placeholder.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuomVDqWWqMDm0h3GGZI5vZuWIbSvSn90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "594527888713-placeholder.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
