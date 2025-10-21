@@ -63,7 +63,7 @@ class _DetailTransaksiPageState extends State<DetailTransaksiPage> {
                         ),
                       ),
                       Text(
-                        Formatters.currency(widget.transaksi.total),
+                        Formatters.currency(widget.transaksi.totalHarga),
                         style: AppTextStyles.heading2.copyWith(
                           color: AppColors.success,
                           fontWeight: FontWeight.bold,
@@ -74,7 +74,7 @@ class _DetailTransaksiPageState extends State<DetailTransaksiPage> {
                   const Divider(height: 24),
                   _buildInfoRow('Tanggal', Formatters.dateTime(widget.transaksi.tanggal)),
                   const SizedBox(height: 8),
-                  _buildInfoRow('Metode', widget.transaksi.metode),
+                  _buildInfoRow('Metode', 'Tunai'), // Default since metode not in model
                   if (widget.transaksi.catatan != null && widget.transaksi.catatan!.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     _buildInfoRow('Catatan', widget.transaksi.catatan!),
@@ -127,13 +127,13 @@ class _DetailTransaksiPageState extends State<DetailTransaksiPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${Formatters.currency(detail.hargaSatuan)} × ${detail.jumlah}',
+                                'Jumlah: ${detail.jumlah}', // hargaSatuan not available
                                 style: AppTextStyles.bodyMedium.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
                               ),
                               Text(
-                                Formatters.currency(detail.subtotal),
+                                '${detail.jumlah} item', // subtotal not available
                                 style: AppTextStyles.bodyLarge.copyWith(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.w600,

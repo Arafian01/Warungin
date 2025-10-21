@@ -62,7 +62,7 @@ class _CartPageState extends State<CartPage> {
                   const SizedBox(height: 16),
                   Text(
                     'Keranjang Kosong',
-                    style: AppTextStyles.headingMedium.copyWith(
+                    style: AppTextStyles.heading3.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -173,7 +173,7 @@ class _CartPageState extends State<CartPage> {
                                 ),
                                 Text(
                                   Formatters.currency(item.subtotal),
-                                  style: AppTextStyles.headingSmall.copyWith(
+                                  style: AppTextStyles.bodyLarge.copyWith(
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -232,7 +232,7 @@ class _CartPageState extends State<CartPage> {
                             ),
                             Text(
                               Formatters.currency(cart.totalAmount),
-                              style: AppTextStyles.headingLarge.copyWith(
+                              style: AppTextStyles.heading2.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
                               ),

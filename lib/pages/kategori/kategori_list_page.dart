@@ -9,8 +9,15 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/loading_indicator.dart';
 import 'kategori_form_page.dart';
 
-class KategoriListPage extends StatelessWidget {
+class KategoriListPage extends StatefulWidget {
   const KategoriListPage({Key? key}) : super(key: key);
+
+  @override
+  State<KategoriListPage> createState() => _KategoriListPageState();
+}
+
+class _KategoriListPageState extends State<KategoriListPage> {
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +32,29 @@ class KategoriListPage extends StatelessWidget {
           'Kategori Barang',
           style: TextStyle(color: Colors.white),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              // TODO: Implement search
-            },
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Cari kategori...',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
           ),
-        ],
+        ),
       ),
       body: StreamBuilder<List<KategoriModel>>(
         stream: kategoriProvider.getKategoriStream(),
@@ -47,9 +69,16 @@ class KategoriListPage extends StatelessWidget {
             );
           }
 
-          final kategoriList = snapshot.data ?? [];
+          final allKategoriList = snapshot.data ?? [];
+          
+          // Filter categories based on search query
+          final kategoriList = allKategoriList.where((kategori) {
+            if (_searchQuery.isEmpty) return true;
+            return kategori.namaKategori.toLowerCase().contains(_searchQuery) ||
+                   (kategori.deskripsi?.toLowerCase().contains(_searchQuery) ?? false);
+          }).toList();
 
-          if (kategoriList.isEmpty) {
+          if (allKategoriList.isEmpty) {
             return EmptyState(
               icon: Icons.category_outlined,
               title: 'Belum Ada Kategori',
@@ -62,6 +91,35 @@ class KategoriListPage extends StatelessWidget {
                   ),
                 );
               },
+            );
+          }
+
+          if (kategoriList.isEmpty && _searchQuery.isNotEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.search_off,
+                    size: 80,
+                    color: AppColors.textSecondary.withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Kategori Tidak Ditemukan',
+                    style: AppTextStyles.heading3.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Coba kata kunci yang berbeda',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             );
           }
 

@@ -50,7 +50,7 @@ class TransaksiCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      Formatters.currency(transaksi.total),
+                      Formatters.currency(transaksi.totalHarga),
                       style: AppTextStyles.bodyLarge.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.success,
@@ -91,7 +91,7 @@ class TransaksiCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  transaksi.metode,
+                  'Tunai', // Default payment method since metode is not in model
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,

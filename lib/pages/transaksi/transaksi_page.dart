@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/cart_provider.dart';
-import '../../providers/barang_provider.dart';
-import '../../providers/transaksi_provider.dart';
 import '../../models/barang_model.dart';
-import '../../models/transaksi_model.dart';
-import '../../models/detail_transaksi_model.dart';
+import '../../models/barang_satuan_model.dart';
+import '../../providers/barang_provider.dart';
+import '../../providers/barang_satuan_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 import '../../utils/helpers.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/custom_card.dart';
-import '../../widgets/cart_item_card.dart';
-import '../../widgets/empty_state.dart';
-import '../../widgets/loading_indicator.dart';
-import 'select_barang_page.dart';
+import 'cart_page.dart';
 
 class TransaksiPage extends StatefulWidget {
   const TransaksiPage({Key? key}) : super(key: key);
@@ -24,69 +18,16 @@ class TransaksiPage extends StatefulWidget {
 }
 
 class _TransaksiPageState extends State<TransaksiPage> {
-  String _selectedMetode = PaymentMethods.cash;
-  final _catatanController = TextEditingController();
-
+  String _searchQuery = '';
+  
   @override
-  void dispose() {
-    _catatanController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<BarangSatuanProvider>(context, listen: false).loadAllBarangSatuan();
+    });
   }
 
-  Future<void> _handleCheckout() async {
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    
-    if (cartProvider.items.isEmpty) {
-      Helpers.showError(context, 'Keranjang masih kosong');
-      return;
-    }
-
-    final confirm = await Helpers.showConfirmDialog(
-      context,
-      title: 'Konfirmasi Transaksi',
-      message: 'Total: ${Formatters.currency(cartProvider.totalAmount)}\nLanjutkan transaksi?',
-    );
-
-    if (!confirm) return;
-
-    final transaksiProvider = Provider.of<TransaksiProvider>(context, listen: false);
-
-    // Create transaksi
-    final transaksi = TransaksiModel(
-      tanggal: DateTime.now(),
-      totalHarga: cartProvider.totalAmount,
-      catatan: _catatanController.text.trim(),
-    );
-
-    // Create detail transaksi
-    final details = cartProvider.items.map((item) {
-      return DetailTransaksiModel(
-        idTransaksi: '', // Will be set by service
-        idBarangSatuan: item.barangSatuan.id!,
-        idBarang: item.barang.id!,
-        namaBarang: item.barang.namaBarang,
-        jumlah: item.jumlah,
-      );
-    }).toList();
-
-    final success = await transaksiProvider.createTransaksi(transaksi, details);
-
-    if (!mounted) return;
-
-    if (success) {
-      Helpers.showSuccess(context, 'Transaksi berhasil disimpan');
-      cartProvider.clearCart();
-      _catatanController.clear();
-      setState(() {
-        _selectedMetode = PaymentMethods.cash;
-      });
-    } else {
-      Helpers.showError(
-        context,
-        transaksiProvider.errorMessage ?? 'Gagal menyimpan transaksi',
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,189 +40,162 @@ class _TransaksiPageState extends State<TransaksiPage> {
           'Transaksi Baru',
           style: TextStyle(color: Colors.white),
         ),
-        actions: [
-          Consumer<CartProvider>(
-            builder: (context, cartProvider, _) {
-              if (cartProvider.items.isEmpty) return const SizedBox();
-              
-              return TextButton.icon(
-                onPressed: () {
-                  cartProvider.clearCart();
-                  Helpers.showSuccess(context, 'Keranjang dikosongkan');
-                },
-                icon: const Icon(Icons.delete_sweep, color: Colors.white),
-                label: const Text(
-                  'Kosongkan',
-                  style: TextStyle(color: Colors.white),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Cart items
-          Expanded(
-            child: Consumer<CartProvider>(
-              builder: (context, cartProvider, _) {
-                if (cartProvider.items.isEmpty) {
-                  return EmptyState(
-                    icon: Icons.shopping_cart_outlined,
-                    title: 'Keranjang Kosong',
-                    message: 'Tambahkan barang untuk memulai transaksi',
-                    actionText: 'Pilih Barang',
-                    onAction: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SelectBarangPage(),
-                        ),
-                      );
-                    },
-                  );
-                }
-
-                return ListView(
-                  padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-                  children: [
-                    ...cartProvider.items.map((item) {
-                      return CartItemCard(
-                        item: item,
-                        onIncrement: () {
-                          cartProvider.updateItemQuantity(
-                            item.barangSatuan.id!,
-                            item.jumlah + 1,
-                          );
-                        },
-                        onDecrement: () {
-                          cartProvider.updateItemQuantity(
-                            item.barangSatuan.id!,
-                            item.jumlah - 1,
-                          );
-                        },
-                        onRemove: () {
-                          cartProvider.removeItem(item.barangSatuan.id!);
-                          Helpers.showSuccess(context, 'Barang dihapus dari keranjang');
-                        },
-                      );
-                    }).toList(),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Payment method
-                    CustomCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Metode Pembayaran',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: PaymentMethods.getAll().map((metode) {
-                              final isSelected = _selectedMetode == metode;
-                              return ChoiceChip(
-                                label: Text(metode),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setState(() {
-                                    _selectedMetode = metode;
-                                  });
-                                },
-                                selectedColor: AppColors.primary,
-                                labelStyle: TextStyle(
-                                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Notes
-                    CustomCard(
-                      child: TextField(
-                        controller: _catatanController,
-                        decoration: const InputDecoration(
-                          labelText: 'Catatan (Opsional)',
-                          hintText: 'Tambahkan catatan transaksi',
-                          border: InputBorder.none,
-                        ),
-                        maxLines: 2,
-                      ),
-                    ),
-                  ],
-                );
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
               },
+              decoration: InputDecoration(
+                hintText: 'Cari barang...',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
           ),
-          
-          // Bottom summary
-          Consumer<CartProvider>(
-            builder: (context, cartProvider, _) {
-              if (cartProvider.items.isEmpty) return const SizedBox();
-              
-              return Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: SafeArea(
+        ),
+      ),
+      body: StreamBuilder<List<BarangModel>>(
+        stream: Provider.of<BarangProvider>(context, listen: false).getBarangStream(),
+        builder: (context, barangSnapshot) {
+          if (barangSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (barangSnapshot.hasError) {
+            return Center(
+              child: Text('Error loading barang: ${barangSnapshot.error}'),
+            );
+          }
+
+          final barangList = barangSnapshot.data ?? [];
+
+          return Consumer<BarangSatuanProvider>(
+            builder: (context, satuanProv, _) {
+              if (satuanProv.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              // Group satuan by barang
+              Map<String, List<BarangSatuanModel>> groupedSatuan = {};
+              for (var satuan in satuanProv.barangSatuanList) {
+                if (!groupedSatuan.containsKey(satuan.idBarang)) {
+                  groupedSatuan[satuan.idBarang] = [];
+                }
+                groupedSatuan[satuan.idBarang]!.add(satuan);
+              }
+
+              // Filter by search
+              var filteredBarang = barangList.where((barang) {
+                if (_searchQuery.isEmpty) return true;
+                return barang.namaBarang.toLowerCase().contains(_searchQuery);
+              }).where((barang) {
+                // Only show barang that has satuan
+                return groupedSatuan.containsKey(barang.id);
+              }).toList();
+
+              if (filteredBarang.isEmpty) {
+                return Center(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Total (${cartProvider.itemCount} item)',
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            Formatters.currency(cartProvider.totalAmount),
-                            style: AppTextStyles.heading3.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 80,
+                        color: AppColors.textSecondary.withOpacity(0.5),
                       ),
-                      const SizedBox(height: 12),
-                      Consumer<TransaksiProvider>(
-                        builder: (context, transaksiProvider, _) {
-                          return CustomButton(
-                            text: 'Proses Transaksi',
-                            onPressed: _handleCheckout,
-                            isLoading: transaksiProvider.isLoading,
-                            icon: Icons.check_circle_outline,
-                            width: double.infinity,
-                          );
-                        },
+                      const SizedBox(height: 16),
+                      Text(
+                        'Tidak ada barang',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tambahkan satuan pada barang terlebih dahulu',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+                itemCount: filteredBarang.length,
+                itemBuilder: (context, index) {
+                  final barang = filteredBarang[index];
+                  final satuanList = groupedSatuan[barang.id] ?? [];
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: AppDimensions.paddingMedium),
+                    child: ExpansionTile(
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.primary.withOpacity(0.1),
+                        child: const Icon(
+                          Icons.inventory_2_outlined,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      title: Text(
+                        barang.namaBarang,
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${satuanList.length} satuan tersedia',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      children: satuanList.map((satuan) {
+                        return ListTile(
+                          leading: const Icon(
+                            Icons.scale_outlined,
+                            color: AppColors.primary,
+                          ),
+                          title: Text(satuan.namaSatuan),
+                          subtitle: Text(
+                            Formatters.currency(satuan.hargaJual),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: ElevatedButton.icon(
+                            onPressed: () => _addToCart(barang, satuan),
+                            icon: const Icon(Icons.add_shopping_cart, size: 18),
+                            label: const Text('Tambah'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               );
             },
-          ),
-        ],
+          );
+        },
       ),
       floatingActionButton: Consumer<CartProvider>(
         builder: (context, cartProvider, _) {
@@ -289,7 +203,7 @@ class _TransaksiPageState extends State<TransaksiPage> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const SelectBarangPage(),
+                  builder: (_) => const CartPage(),
                 ),
               );
             },
@@ -297,11 +211,21 @@ class _TransaksiPageState extends State<TransaksiPage> {
             child: Badge(
               label: Text('${cartProvider.itemCount}'),
               isLabelVisible: cartProvider.itemCount > 0,
-              child: const Icon(Icons.add_shopping_cart),
+              child: const Icon(Icons.shopping_cart),
             ),
           );
         },
       ),
+    );
+  }
+
+  void _addToCart(BarangModel barang, BarangSatuanModel satuan) {
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    cartProvider.addItem(satuan, barang, 1);
+    
+    Helpers.showSuccess(
+      context,
+      '${barang.namaBarang} (${satuan.namaSatuan}) ditambahkan ke keranjang',
     );
   }
 }

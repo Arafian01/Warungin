@@ -12,8 +12,15 @@ import '../../widgets/loading_indicator.dart';
 import 'barang_form_page.dart';
 import 'barang_satuan_list_page.dart';
 
-class BarangListPage extends StatelessWidget {
+class BarangListPage extends StatefulWidget {
   const BarangListPage({Key? key}) : super(key: key);
+
+  @override
+  State<BarangListPage> createState() => _BarangListPageState();
+}
+
+class _BarangListPageState extends State<BarangListPage> {
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +36,29 @@ class BarangListPage extends StatelessWidget {
           'Daftar Barang',
           style: TextStyle(color: Colors.white),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              // TODO: Implement search
-            },
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Cari barang...',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
           ),
-        ],
+        ),
       ),
       body: StreamBuilder<List<BarangModel>>(
         stream: barangProvider.getBarangStream(),
@@ -51,9 +73,9 @@ class BarangListPage extends StatelessWidget {
             );
           }
 
-          final barangList = barangSnapshot.data ?? [];
+          final allBarangList = barangSnapshot.data ?? [];
 
-          if (barangList.isEmpty) {
+          if (allBarangList.isEmpty) {
             return EmptyState(
               icon: Icons.inventory_2_outlined,
               title: 'Belum Ada Barang',
@@ -80,6 +102,43 @@ class BarangListPage extends StatelessWidget {
                 if (kategori.id != null) {
                   kategoriMap[kategori.id!] = kategori.namaKategori;
                 }
+              }
+
+              // Filter barang based on search query
+              final barangList = allBarangList.where((barang) {
+                if (_searchQuery.isEmpty) return true;
+                final kategoriName = kategoriMap[barang.idKategori]?.toLowerCase() ?? '';
+                return barang.namaBarang.toLowerCase().contains(_searchQuery) ||
+                       kategoriName.contains(_searchQuery);
+              }).toList();
+
+              if (barangList.isEmpty && _searchQuery.isNotEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 80,
+                        color: AppColors.textSecondary.withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Barang Tidak Ditemukan',
+                        style: AppTextStyles.heading3.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Coba kata kunci yang berbeda',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
 
               return ListView.builder(
