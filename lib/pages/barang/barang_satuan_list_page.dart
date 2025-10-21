@@ -22,9 +22,21 @@ class _BarangSatuanListPageState extends State<BarangSatuanListPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<BarangSatuanProvider>(context, listen: false)
-          .loadBarangSatuanByBarangId(widget.barang.id!);
+      final provider = Provider.of<BarangSatuanProvider>(context, listen: false);
+      provider.clearData(); // Clear any previous data
+      provider.loadBarangSatuanByBarangId(widget.barang.id!);
     });
+  }
+
+  @override
+  void dispose() {
+    // Clear data when leaving page to prevent stale data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<BarangSatuanProvider>(context, listen: false).clearData();
+      }
+    });
+    super.dispose();
   }
 
   @override

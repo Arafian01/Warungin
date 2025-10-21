@@ -8,10 +8,12 @@ class BarangSatuanProvider with ChangeNotifier {
   List<BarangSatuanModel> _barangSatuanList = [];
   bool _isLoading = false;
   String? _errorMessage;
+  String? _currentBarangId; // Track current barang being viewed
 
   List<BarangSatuanModel> get barangSatuanList => _barangSatuanList;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get currentBarangId => _currentBarangId;
 
   // Create barang satuan
   Future<bool> createBarangSatuan(BarangSatuanModel barangSatuan) async {
@@ -24,7 +26,10 @@ class BarangSatuanProvider with ChangeNotifier {
       _isLoading = false;
       
       if (id != null) {
-        notifyListeners();
+        // Refresh the current barang's satuan list if we're viewing one
+        if (_currentBarangId != null) {
+          loadBarangSatuanByBarangId(_currentBarangId!);
+        }
         return true;
       } else {
         _errorMessage = 'Gagal menambahkan satuan barang';
@@ -41,6 +46,7 @@ class BarangSatuanProvider with ChangeNotifier {
 
   // Load all barang satuan
   void loadAllBarangSatuan() {
+    _currentBarangId = null; // Clear current barang filter
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -61,6 +67,8 @@ class BarangSatuanProvider with ChangeNotifier {
 
   // Load barang satuan by barang ID
   void loadBarangSatuanByBarangId(String idBarang) {
+    _barangSatuanList.clear(); // Clear previous data
+    _currentBarangId = idBarang; // Set current barang filter
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -101,7 +109,10 @@ class BarangSatuanProvider with ChangeNotifier {
       _isLoading = false;
       
       if (success) {
-        notifyListeners();
+        // Refresh the current barang's satuan list if we're viewing one
+        if (_currentBarangId != null) {
+          loadBarangSatuanByBarangId(_currentBarangId!);
+        }
         return true;
       } else {
         _errorMessage = 'Gagal mengupdate satuan barang';
@@ -127,7 +138,10 @@ class BarangSatuanProvider with ChangeNotifier {
       _isLoading = false;
       
       if (success) {
-        notifyListeners();
+        // Refresh the current barang's satuan list if we're viewing one
+        if (_currentBarangId != null) {
+          loadBarangSatuanByBarangId(_currentBarangId!);
+        }
         return true;
       } else {
         _errorMessage = 'Gagal menghapus satuan barang';
@@ -174,7 +188,12 @@ class BarangSatuanProvider with ChangeNotifier {
   // Search barang satuan
   void searchBarangSatuan(String query) {
     if (query.isEmpty) {
-      loadAllBarangSatuan();
+      // If we have a current barang filter, reload that instead of all
+      if (_currentBarangId != null) {
+        loadBarangSatuanByBarangId(_currentBarangId!);
+      } else {
+        loadAllBarangSatuan();
+      }
       return;
     }
 
@@ -197,6 +216,15 @@ class BarangSatuanProvider with ChangeNotifier {
 
   // Clear error message
   void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  // Clear current data and filter (useful when navigating away)
+  void clearData() {
+    _barangSatuanList.clear();
+    _currentBarangId = null;
+    _isLoading = false;
     _errorMessage = null;
     notifyListeners();
   }
