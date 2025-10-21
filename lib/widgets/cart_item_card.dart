@@ -39,7 +39,7 @@ class CartItemCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${Formatters.currency(item.barang.harga)} / ${item.barang.satuan}',
+                  '${Formatters.currency(item.barangSatuan.hargaJual)} / ${item.barangSatuan.namaSatuan}',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),

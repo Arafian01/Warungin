@@ -6,6 +6,7 @@ import 'custom_card.dart';
 
 class BarangCard extends StatelessWidget {
   final BarangModel barang;
+  final String? kategoriName;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -15,6 +16,7 @@ class BarangCard extends StatelessWidget {
   const BarangCard({
     Key? key,
     required this.barang,
+    this.kategoriName,
     this.onTap,
     this.onEdit,
     this.onDelete,
@@ -60,7 +62,7 @@ class BarangCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Kategori: ${barang.idKategori}',
+                  'Kategori: ${kategoriName ?? 'Tidak ada kategori'}',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),

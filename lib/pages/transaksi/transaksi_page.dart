@@ -54,8 +54,7 @@ class _TransaksiPageState extends State<TransaksiPage> {
     // Create transaksi
     final transaksi = TransaksiModel(
       tanggal: DateTime.now(),
-      total: cartProvider.totalAmount,
-      metode: _selectedMetode,
+      totalHarga: cartProvider.totalAmount,
       catatan: _catatanController.text.trim(),
     );
 
@@ -63,11 +62,10 @@ class _TransaksiPageState extends State<TransaksiPage> {
     final details = cartProvider.items.map((item) {
       return DetailTransaksiModel(
         idTransaksi: '', // Will be set by service
+        idBarangSatuan: item.barangSatuan.id!,
         idBarang: item.barang.id!,
         namaBarang: item.barang.namaBarang,
         jumlah: item.jumlah,
-        hargaSatuan: item.barang.harga,
-        subtotal: item.subtotal,
       );
     }).toList();
 
@@ -151,18 +149,18 @@ class _TransaksiPageState extends State<TransaksiPage> {
                         item: item,
                         onIncrement: () {
                           cartProvider.updateItemQuantity(
-                            item.barang.id!,
+                            item.barangSatuan.id!,
                             item.jumlah + 1,
                           );
                         },
                         onDecrement: () {
                           cartProvider.updateItemQuantity(
-                            item.barang.id!,
+                            item.barangSatuan.id!,
                             item.jumlah - 1,
                           );
                         },
                         onRemove: () {
-                          cartProvider.removeItem(item.barang.id!);
+                          cartProvider.removeItem(item.barangSatuan.id!);
                           Helpers.showSuccess(context, 'Barang dihapus dari keranjang');
                         },
                       );

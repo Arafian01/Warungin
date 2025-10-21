@@ -3,7 +3,7 @@ import '../utils/constants.dart';
 import 'dashboard/dashboard_page.dart';
 import 'kategori/kategori_list_page.dart';
 import 'barang/barang_list_page.dart';
-// import 'transaksi/transaksi_page.dart'; // DISABLED
+import 'transaksi/transaksi_page.dart';
 // import 'riwayat/riwayat_page.dart'; // DISABLED
 
 class MainPage extends StatefulWidget {
@@ -20,7 +20,7 @@ class _MainPageState extends State<MainPage> {
     DashboardPage(),
     KategoriListPage(),
     BarangListPage(),
-    // TransaksiPage(), // DISABLED
+    TransaksiPage(),
     // RiwayatPage(), // DISABLED
   ];
 
@@ -58,12 +58,11 @@ class _MainPageState extends State<MainPage> {
             activeIcon: Icon(Icons.inventory_2),
             label: AppStrings.barang,
           ),
-          // DISABLED - Transaksi features
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.shopping_cart_outlined),
-          //   activeIcon: Icon(Icons.shopping_cart),
-          //   label: AppStrings.transaksi,
-          // ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined),
+            activeIcon: Icon(Icons.shopping_cart),
+            label: AppStrings.transaksi,
+          ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.history_outlined),
           //   activeIcon: Icon(Icons.history),

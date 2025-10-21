@@ -23,7 +23,6 @@ class _SelectBarangSatuanPageState extends State<SelectBarangSatuanPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<BarangProvider>(context, listen: false).loadBarang();
       Provider.of<BarangSatuanProvider>(context, listen: false).loadAllBarangSatuan();
     });
   }
@@ -57,117 +56,134 @@ class _SelectBarangSatuanPageState extends State<SelectBarangSatuanPage> {
           ),
         ),
       ),
-      body: Consumer2<BarangProvider, BarangSatuanProvider>(
-        builder: (context, barangProv, satuanProv, _) {
-          if (barangProv.isLoading || satuanProv.isLoading) {
+      body: StreamBuilder<List<BarangModel>>(
+        stream: Provider.of<BarangProvider>(context, listen: false).getBarangStream(),
+        builder: (context, barangSnapshot) {
+          if (barangSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Group satuan by barang
-          Map<String, List<BarangSatuanModel>> groupedSatuan = {};
-          for (var satuan in satuanProv.barangSatuanList) {
-            if (!groupedSatuan.containsKey(satuan.idBarang)) {
-              groupedSatuan[satuan.idBarang] = [];
-            }
-            groupedSatuan[satuan.idBarang]!.add(satuan);
-          }
-
-          // Filter by search
-          var filteredBarang = barangProv.barangList.where((barang) {
-            if (_searchQuery.isEmpty) return true;
-            return barang.namaBarang.toLowerCase().contains(_searchQuery);
-          }).where((barang) {
-            // Only show barang that has satuan
-            return groupedSatuan.containsKey(barang.id);
-          }).toList();
-
-          if (filteredBarang.isEmpty) {
+          if (barangSnapshot.hasError) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.inventory_2_outlined,
-                    size: 80,
-                    color: AppColors.textSecondary.withOpacity(0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Tidak ada barang',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tambahkan satuan pada barang terlebih dahulu',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+              child: Text('Error loading barang: ${barangSnapshot.error}'),
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(AppDimensions.marginMedium),
-            itemCount: filteredBarang.length,
-            itemBuilder: (context, index) {
-              final barang = filteredBarang[index];
-              final satuanList = groupedSatuan[barang.id] ?? [];
+          final barangList = barangSnapshot.data ?? [];
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: AppDimensions.marginMedium),
-                child: ExpansionTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
-                    child: const Icon(
-                      Icons.inventory_2_outlined,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  title: Text(
-                    barang.namaBarang,
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${satuanList.length} satuan tersedia',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  children: satuanList.map((satuan) {
-                    return ListTile(
-                      leading: const Icon(
-                        Icons.scale_outlined,
-                        color: AppColors.primary,
+          return Consumer<BarangSatuanProvider>(
+            builder: (context, satuanProv, _) {
+              if (satuanProv.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              // Group satuan by barang
+              Map<String, List<BarangSatuanModel>> groupedSatuan = {};
+              for (var satuan in satuanProv.barangSatuanList) {
+                if (!groupedSatuan.containsKey(satuan.idBarang)) {
+                  groupedSatuan[satuan.idBarang] = [];
+                }
+                groupedSatuan[satuan.idBarang]!.add(satuan);
+              }
+
+              // Filter by search
+              var filteredBarang = barangList.where((barang) {
+                if (_searchQuery.isEmpty) return true;
+                return barang.namaBarang.toLowerCase().contains(_searchQuery);
+              }).where((barang) {
+                // Only show barang that has satuan
+                return groupedSatuan.containsKey(barang.id);
+              }).toList();
+
+              if (filteredBarang.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 80,
+                        color: AppColors.textSecondary.withOpacity(0.5),
                       ),
-                      title: Text(satuan.namaSatuan),
-                      subtitle: Text(
-                        Formatters.currency(satuan.hargaJual),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Tidak ada barang',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tambahkan satuan pada barang terlebih dahulu',
                         style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(AppDimensions.marginMedium),
+                itemCount: filteredBarang.length,
+                itemBuilder: (context, index) {
+                  final barang = filteredBarang[index];
+                  final satuanList = groupedSatuan[barang.id] ?? [];
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: AppDimensions.marginMedium),
+                    child: ExpansionTile(
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.primary.withOpacity(0.1),
+                        child: const Icon(
+                          Icons.inventory_2_outlined,
                           color: AppColors.primary,
+                        ),
+                      ),
+                      title: Text(
+                        barang.namaBarang,
+                        style: AppTextStyles.bodyLarge.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      trailing: ElevatedButton.icon(
-                        onPressed: () => _addToCart(barang, satuan),
-                        icon: const Icon(Icons.add_shopping_cart, size: 18),
-                        label: const Text('Tambah'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
+                      subtitle: Text(
+                        '${satuanList.length} satuan tersedia',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
+                      children: satuanList.map((satuan) {
+                        return ListTile(
+                          leading: const Icon(
+                            Icons.scale_outlined,
+                            color: AppColors.primary,
+                          ),
+                          title: Text(satuan.namaSatuan),
+                          subtitle: Text(
+                            Formatters.currency(satuan.hargaJual),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: ElevatedButton.icon(
+                            onPressed: () => _addToCart(barang, satuan),
+                            icon: const Icon(Icons.add_shopping_cart, size: 18),
+                            label: const Text('Tambah'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               );
             },
           );

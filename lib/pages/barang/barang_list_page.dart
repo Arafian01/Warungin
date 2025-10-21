@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/barang_provider.dart';
+import '../../providers/kategori_provider.dart';
 import '../../models/barang_model.dart';
+import '../../models/kategori_model.dart';
 import '../../utils/constants.dart';
 import '../../utils/helpers.dart';
 import '../../widgets/barang_card.dart';
@@ -16,6 +18,7 @@ class BarangListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final barangProvider = Provider.of<BarangProvider>(context);
+    final kategoriProvider = Provider.of<KategoriProvider>(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -37,18 +40,18 @@ class BarangListPage extends StatelessWidget {
       ),
       body: StreamBuilder<List<BarangModel>>(
         stream: barangProvider.getBarangStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        builder: (context, barangSnapshot) {
+          if (barangSnapshot.connectionState == ConnectionState.waiting) {
             return const LoadingIndicator(message: 'Memuat barang...');
           }
 
-          if (snapshot.hasError) {
+          if (barangSnapshot.hasError) {
             return Center(
-              child: Text('Error: ${snapshot.error}'),
+              child: Text('Error: ${barangSnapshot.error}'),
             );
           }
 
-          final barangList = snapshot.data ?? [];
+          final barangList = barangSnapshot.data ?? [];
 
           if (barangList.isEmpty) {
             return EmptyState(
@@ -66,13 +69,29 @@ class BarangListPage extends StatelessWidget {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-            itemCount: barangList.length,
-            itemBuilder: (context, index) {
-              final barang = barangList[index];
-              return BarangCard(
-                barang: barang,
+          return StreamBuilder<List<KategoriModel>>(
+            stream: kategoriProvider.getKategoriStream(),
+            builder: (context, kategoriSnapshot) {
+              final kategoriList = kategoriSnapshot.data ?? [];
+              
+              // Create a map for quick category lookup
+              Map<String, String> kategoriMap = {};
+              for (var kategori in kategoriList) {
+                if (kategori.id != null) {
+                  kategoriMap[kategori.id!] = kategori.namaKategori;
+                }
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+                itemCount: barangList.length,
+                itemBuilder: (context, index) {
+                  final barang = barangList[index];
+                  final kategoriName = kategoriMap[barang.idKategori];
+                  
+                  return BarangCard(
+                    barang: barang,
+                    kategoriName: kategoriName,
                 onKelolaSatuan: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -107,6 +126,8 @@ class BarangListPage extends StatelessWidget {
                       }
                     }
                   }
+                    },
+                  );
                 },
               );
             },
