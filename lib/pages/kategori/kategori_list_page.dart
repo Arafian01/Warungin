@@ -7,6 +7,7 @@ import '../../utils/helpers.dart';
 import '../../widgets/kategori_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_indicator.dart';
+import '../../widgets/animated_search_header.dart';
 import 'kategori_form_page.dart';
 
 class KategoriListPage extends StatefulWidget {
@@ -28,33 +29,17 @@ class _KategoriListPageState extends State<KategoriListPage> {
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        title: const Text(
-          'Kategori Barang',
-          style: TextStyle(color: Colors.white),
+        title: AnimatedSearchHeader(
+          title: 'Kategori Barang',
+          onSearchChanged: (value) {
+            setState(() {
+              _searchQuery = value.toLowerCase();
+            });
+          },
+          showFilter: false,
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Cari kategori...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
-        ),
+        automaticallyImplyLeading: false,
+        toolbarHeight: 56,
       ),
       body: StreamBuilder<List<KategoriModel>>(
         stream: kategoriProvider.getKategoriStream(),
