@@ -9,6 +9,8 @@ import '../../utils/helpers.dart';
 import '../../widgets/barang_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_indicator.dart';
+import '../../widgets/animated_search_header.dart';
+import '../../widgets/category_filter_modal.dart';
 import 'barang_form_page.dart';
 import 'barang_satuan_list_page.dart';
 
@@ -21,6 +23,7 @@ class BarangListPage extends StatefulWidget {
 
 class _BarangListPageState extends State<BarangListPage> {
   String _searchQuery = '';
+  String? _selectedCategoryId;
 
   @override
   Widget build(BuildContext context) {
@@ -32,33 +35,33 @@ class _BarangListPageState extends State<BarangListPage> {
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        title: const Text(
-          'Daftar Barang',
-          style: TextStyle(color: Colors.white),
+        title: AnimatedSearchHeader(
+          title: 'Daftar Barang',
+          onSearchChanged: (value) {
+            setState(() {
+              _searchQuery = value.toLowerCase();
+            });
+          },
+          showFilter: true,
+          onFilterPressed: () async {
+            final kategoriStream = kategoriProvider.getKategoriStream();
+            final kategoriList = await kategoriStream.first;
+            if (context.mounted) {
+              showCategoryFilterModal(
+                context,
+                categories: kategoriList,
+                selectedCategoryId: _selectedCategoryId,
+                onCategorySelected: (categoryId) {
+                  setState(() {
+                    _selectedCategoryId = categoryId;
+                  });
+                },
+              );
+            }
+          },
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Cari barang...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
-        ),
+        automaticallyImplyLeading: false,
+        toolbarHeight: 56,
       ),
       body: StreamBuilder<List<BarangModel>>(
         stream: barangProvider.getBarangStream(),
@@ -104,8 +107,13 @@ class _BarangListPageState extends State<BarangListPage> {
                 }
               }
 
-              // Filter barang based on search query
+              // Filter barang based on search query and category
               final barangList = allBarangList.where((barang) {
+                // Category filter
+                if (_selectedCategoryId != null && barang.idKategori != _selectedCategoryId) {
+                  return false;
+                }
+                // Search filter
                 if (_searchQuery.isEmpty) return true;
                 final kategoriName = kategoriMap[barang.idKategori]?.toLowerCase() ?? '';
                 return barang.namaBarang.toLowerCase().contains(_searchQuery) ||

@@ -5,9 +5,12 @@ import '../../models/barang_satuan_model.dart';
 import '../../providers/barang_provider.dart';
 import '../../providers/barang_satuan_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/kategori_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 import '../../utils/helpers.dart';
+import '../../widgets/animated_search_header.dart';
+import '../../widgets/category_filter_modal.dart';
 import 'cart_page.dart';
 
 class TransaksiPage extends StatefulWidget {
@@ -19,6 +22,7 @@ class TransaksiPage extends StatefulWidget {
 
 class _TransaksiPageState extends State<TransaksiPage> {
   String _searchQuery = '';
+  String? _selectedCategoryId;
   
   @override
   void initState() {
@@ -31,38 +35,40 @@ class _TransaksiPageState extends State<TransaksiPage> {
 
   @override
   Widget build(BuildContext context) {
+    final kategoriProvider = Provider.of<KategoriProvider>(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        title: const Text(
-          'Transaksi Baru',
-          style: TextStyle(color: Colors.white),
+        title: AnimatedSearchHeader(
+          title: 'Transaksi Baru',
+          onSearchChanged: (value) {
+            setState(() {
+              _searchQuery = value.toLowerCase();
+            });
+          },
+          showFilter: true,
+          onFilterPressed: () async {
+            final kategoriStream = kategoriProvider.getKategoriStream();
+            final kategoriList = await kategoriStream.first;
+            if (context.mounted) {
+              showCategoryFilterModal(
+                context,
+                categories: kategoriList,
+                selectedCategoryId: _selectedCategoryId,
+                onCategorySelected: (categoryId) {
+                  setState(() {
+                    _selectedCategoryId = categoryId;
+                  });
+                },
+              );
+            }
+          },
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Cari barang...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
-        ),
+        automaticallyImplyLeading: false,
+        toolbarHeight: 56,
       ),
       body: StreamBuilder<List<BarangModel>>(
         stream: Provider.of<BarangProvider>(context, listen: false).getBarangStream(),
@@ -94,8 +100,13 @@ class _TransaksiPageState extends State<TransaksiPage> {
                 groupedSatuan[satuan.idBarang]!.add(satuan);
               }
 
-              // Filter by search
+              // Filter by category and search
               var filteredBarang = barangList.where((barang) {
+                // Category filter
+                if (_selectedCategoryId != null && barang.idKategori != _selectedCategoryId) {
+                  return false;
+                }
+                // Search filter
                 if (_searchQuery.isEmpty) return true;
                 return barang.namaBarang.toLowerCase().contains(_searchQuery);
               }).where((barang) {
