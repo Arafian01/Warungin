@@ -7,10 +7,10 @@ import '../../providers/barang_satuan_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/kategori_provider.dart';
 import '../../utils/constants.dart';
-import '../../utils/formatters.dart';
 import '../../utils/helpers.dart';
 import '../../widgets/animated_search_header.dart';
 import '../../widgets/category_filter_modal.dart';
+import '../../widgets/barang_satuan_modal.dart';
 import 'cart_page.dart';
 
 class TransaksiPage extends StatefulWidget {
@@ -153,53 +153,60 @@ class _TransaksiPageState extends State<TransaksiPage> {
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: AppDimensions.paddingMedium),
-                    child: ExpansionTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.primary.withOpacity(0.1),
-                        child: const Icon(
-                          Icons.inventory_2_outlined,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      title: Text(
-                        barang.namaBarang,
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: Text(
-                        '${satuanList.length} satuan tersedia',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      children: satuanList.map((satuan) {
-                        return ListTile(
-                          leading: const Icon(
-                            Icons.scale_outlined,
-                            color: AppColors.primary,
-                          ),
-                          title: Text(satuan.namaSatuan),
-                          subtitle: Text(
-                            Formatters.currency(satuan.hargaJual),
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          trailing: ElevatedButton.icon(
-                            onPressed: () => _addToCart(barang, satuan),
-                            icon: const Icon(Icons.add_shopping_cart, size: 18),
-                            label: const Text('Tambah'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                    child: InkWell(
+                      onTap: () {
+                        BarangSatuanModal.show(
+                          context,
+                          barang: barang,
+                          satuanList: satuanList,
+                          onAddToCart: (satuan) {
+                            _addToCart(barang, satuan);
+                          },
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: AppColors.primary.withOpacity(0.1),
+                              radius: 28,
+                              child: const Icon(
+                                Icons.inventory_2_outlined,
+                                color: AppColors.primary,
+                                size: 28,
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    barang.namaBarang,
+                                    style: AppTextStyles.bodyLarge.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${satuanList.length} satuan tersedia',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },

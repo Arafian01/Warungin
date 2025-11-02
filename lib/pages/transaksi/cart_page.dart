@@ -203,55 +203,69 @@ class _CartPageState extends State<CartPage> {
                 ),
                 child: Column(
                   children: [
-                    // Catatan
-                    TextField(
-                      controller: _catatanController,
-                      decoration: InputDecoration(
-                        hintText: 'Catatan (opsional)',
-                        prefixIcon: const Icon(Icons.note_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
-                        ),
+                    // Total Harga
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
                       ),
-                      maxLines: 2,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total Harga',
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            Formatters.currency(cart.totalAmount),
+                            style: AppTextStyles.heading2.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     
-                    // Total
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              Formatters.currency(cart.totalAmount),
-                              style: AppTextStyles.heading2.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
+                    // Deskripsi
+                    TextField(
+                      controller: _catatanController,
+                      decoration: InputDecoration(
+                        labelText: 'Deskripsi',
+                        hintText: 'Masukkan deskripsi transaksi (opsional)',
+                        prefixIcon: const Icon(Icons.description_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
                         ),
-                        Expanded(
-                          child: Consumer<TransaksiProvider>(
-                            builder: (context, transaksiProv, _) {
-                              return CustomButton(
-                                text: 'Checkout',
-                                onPressed: () => _handleCheckout(cart),
-                                isLoading: transaksiProv.isLoading,
-                                icon: Icons.check_circle_outline,
-                              );
-                            },
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppDimensions.borderRadius),
+                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Checkout Button
+                    Consumer<TransaksiProvider>(
+                      builder: (context, transaksiProv, _) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: CustomButton(
+                            text: 'Checkout',
+                            onPressed: () => _handleCheckout(cart),
+                            isLoading: transaksiProv.isLoading,
+                            icon: Icons.check_circle_outline,
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ],
                 ),
