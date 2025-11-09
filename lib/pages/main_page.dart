@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../utils/constants.dart';
+import '../providers/kategori_provider.dart';
+import '../providers/barang_provider.dart';
+import '../providers/barang_satuan_provider.dart';
+import '../providers/transaksi_provider.dart';
 import 'dashboard/dashboard_page.dart';
 import 'kategori/kategori_list_page.dart';
 import 'barang/barang_list_page.dart';
@@ -23,6 +28,27 @@ class _MainPageState extends State<MainPage> {
     TransaksiPage(),
     // RiwayatPage(), // DISABLED
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocalData();
+  }
+
+  Future<void> _loadLocalData() async {
+    // Load data from local storage into all providers
+    final kategoriProvider = Provider.of<KategoriProvider>(context, listen: false);
+    final barangProvider = Provider.of<BarangProvider>(context, listen: false);
+    final barangSatuanProvider = Provider.of<BarangSatuanProvider>(context, listen: false);
+    final transaksiProvider = Provider.of<TransaksiProvider>(context, listen: false);
+
+    await Future.wait([
+      kategoriProvider.loadFromLocal(),
+      barangProvider.loadFromLocal(),
+      barangSatuanProvider.loadFromLocal(),
+      transaksiProvider.loadFromLocal(),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {

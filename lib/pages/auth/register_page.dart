@@ -39,6 +39,16 @@ class _RegisterPageState extends State<RegisterPage> {
     Helpers.dismissKeyboard(context);
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    // Show loading dialog during sync
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+    
     final success = await authProvider.register(
       _emailController.text.trim(),
       _passwordController.text,
@@ -46,6 +56,9 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     if (!mounted) return;
+    
+    // Close loading dialog
+    Navigator.of(context).pop();
 
     if (success) {
       Navigator.of(context).pushReplacement(

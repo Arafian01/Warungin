@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/barang_model.dart';
 import '../services/barang_service.dart';
+import '../services/data_sync_service.dart';
 
 class BarangProvider with ChangeNotifier {
   final BarangService _barangService = BarangService();
+  DataSyncService? _dataSyncService;
   
   List<BarangModel> _barangList = [];
   bool _isLoading = false;
@@ -12,6 +14,13 @@ class BarangProvider with ChangeNotifier {
   List<BarangModel> get barangList => _barangList;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  // Initialize and load data from local storage
+  Future<void> loadFromLocal() async {
+    _dataSyncService ??= await DataSyncService.getInstance();
+    _barangList = _dataSyncService!.getBarangFromLocal();
+    notifyListeners();
+  }
 
   // Get barang stream
   Stream<List<BarangModel>> getBarangStream() {

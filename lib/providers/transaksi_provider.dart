@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../models/transaksi_model.dart';
 import '../models/detail_transaksi_model.dart';
 import '../services/transaksi_service.dart';
+import '../services/data_sync_service.dart';
 
 class TransaksiProvider with ChangeNotifier {
   final TransaksiService _transaksiService = TransaksiService();
+  DataSyncService? _dataSyncService;
   
   List<TransaksiModel> _transaksiList = [];
   List<DetailTransaksiModel> _currentDetails = [];
@@ -15,6 +17,14 @@ class TransaksiProvider with ChangeNotifier {
   List<DetailTransaksiModel> get currentDetails => _currentDetails;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  // Initialize and load data from local storage
+  Future<void> loadFromLocal() async {
+    _dataSyncService ??= await DataSyncService.getInstance();
+    _transaksiList = _dataSyncService!.getTransaksiFromLocal();
+    _currentDetails = _dataSyncService!.getDetailTransaksiFromLocal();
+    notifyListeners();
+  }
 
   // Get transaksi stream
   Stream<List<TransaksiModel>> getTransaksiStream() {

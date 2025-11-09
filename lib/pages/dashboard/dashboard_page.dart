@@ -37,6 +37,41 @@ class DashboardPage extends StatelessWidget {
           ],
         ),
         actions: [
+          // Refresh Data Button
+          Consumer<auth_provider.AuthProvider>(
+            builder: (context, authProvider, _) {
+              return IconButton(
+                icon: authProvider.isSyncing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.refresh, color: Colors.white),
+                onPressed: authProvider.isSyncing
+                    ? null
+                    : () async {
+                        final success = await authProvider.syncData();
+                        if (context.mounted) {
+                          if (success) {
+                            Helpers.showSuccess(
+                              context,
+                              'Data berhasil diperbarui',
+                            );
+                          } else {
+                            Helpers.showError(
+                              context,
+                              authProvider.errorMessage ?? 'Gagal memperbarui data',
+                            );
+                          }
+                        }
+                      },
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
@@ -82,6 +117,7 @@ class DashboardPage extends StatelessWidget {
 
   Widget _buildSummarySection(BuildContext context) {
     final transaksiProvider = Provider.of<TransaksiProvider>(context);
+    final authProvider = Provider.of<auth_provider.AuthProvider>(context);
     final today = Helpers.getTodayRange();
     
     return Column(
@@ -151,6 +187,37 @@ class DashboardPage extends StatelessWidget {
                 ],
               ),
             );
+          },
+        ),
+        const SizedBox(height: 8),
+        
+        // Last sync info
+        FutureBuilder<DateTime?>(
+          future: authProvider.getLastSyncTime(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.sync,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Terakhir diperbarui: ${Formatters.dateTime(snapshot.data!)}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const SizedBox.shrink();
           },
         ),
       ],

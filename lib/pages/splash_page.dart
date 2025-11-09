@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../utils/constants.dart';
+import '../services/local_storage_service.dart';
 import 'auth/login_page.dart';
 import 'main_page.dart';
 
@@ -15,21 +16,26 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    _checkAuthAndData();
   }
 
-  Future<void> _checkAuthStatus() async {
+  Future<void> _checkAuthAndData() async {
     await Future.delayed(const Duration(seconds: 2));
     
     if (!mounted) return;
     
+    // Get local storage instance
+    final localStorage = await LocalStorageService.getInstance();
+    final hasLocalData = localStorage.hasData();
     final user = FirebaseAuth.instance.currentUser;
     
-    if (user != null) {
+    // If user is logged in OR has cached data, go to MainPage
+    if (user != null || hasLocalData) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainPage()),
       );
     } else {
+      // No user and no cached data, go to LoginPage
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const LoginPage()),
       );

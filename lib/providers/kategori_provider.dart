@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/kategori_model.dart';
 import '../services/kategori_service.dart';
+import '../services/data_sync_service.dart';
 
 class KategoriProvider with ChangeNotifier {
   final KategoriService _kategoriService = KategoriService();
+  DataSyncService? _dataSyncService;
   
   List<KategoriModel> _kategoriList = [];
   bool _isLoading = false;
@@ -12,6 +14,13 @@ class KategoriProvider with ChangeNotifier {
   List<KategoriModel> get kategoriList => _kategoriList;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  // Initialize and load data from local storage
+  Future<void> loadFromLocal() async {
+    _dataSyncService ??= await DataSyncService.getInstance();
+    _kategoriList = _dataSyncService!.getKategoriFromLocal();
+    notifyListeners();
+  }
 
   // Get kategori stream
   Stream<List<KategoriModel>> getKategoriStream() {
